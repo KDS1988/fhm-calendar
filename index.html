@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Календарь матчей ФХМ</title>
+  <style>
+    :root {
+  /* Primitive Color Tokens */
+  --color-white: rgba(255, 255, 255, 1);
+  --color-black: rgba(0, 0, 0, 1);
+  --color-cream-50: rgba(252, 252, 249, 1);
+  --color-cream-100: rgba(255, 255, 253, 1);
+  --color-gray-200: rgba(245, 245, 245, 1);
+  --color-gray-300: rgba(167, 169, 169, 1);
+  --color-gray-400: rgba(119, 124, 124, 1);
+  --color-slate-500: rgba(98, 108, 113, 1);
+  --color-brown-600: rgba(94, 82, 64, 1);
+  --color-charcoal-700: rgba(31, 33, 33, 1);
+  --color-charcoal-800: rgba(38, 40, 40, 1);
+  --color-slate-900: rgba(19, 52, 59, 1);
+  --color-teal-300: rgba(50, 184, 198, 1);
+  --color-teal-400: rgba(45, 166, 178, 1);
+  --color-teal-500: rgba(33, 128, 141, 1);
+  --color-teal-600: rgba(29, 116, 128, 1);
+  --color-teal-700: rgba(26, 104, 115, 1);
+  --color-teal-800: rgba(41, 150, 161, 1);
+  --color-red-400: rgba(255, 84, 89, 1);
+  --color-red-500: rgba(192, 21, 47, 1);
+  --color-orange-400: rgba(230, 129, 97, 1);
+  --color-orange-500: rgba(168, 75, 47, 1);
+
+  /* RGB versions for opacity control */
+  --color-brown-600-rgb: 94, 82, 64;
+  --color-teal-500-rgb: 33, 128, 141;
+  --color-slate-900-rgb: 19, 52, 59;
+  --color-slate-500-rgb: 98, 108, 113;
+  --color-red-500-rgb: 192, 21, 47;
+  --color-red-400-rgb: 255, 84, 89;
+  --color-orange-500-rgb: 168, 75, 47;
+  --color-orange-400-rgb: 230, 129, 97;
+
+  /* Background color tokens (Light Mode) */
+  --color-bg-1: rgba(59, 130, 246, 0.08);
+  --color-bg-2: rgba(245, 158, 11, 0.08);
+  --color-bg-3: rgba(34, 197, 94, 0.08);
+  --color-bg-4: rgba(239, 68, 68, 0.08);
+  --color-bg-5: rgba(147, 51, 234, 0.08);
+  --color-bg-6: rgba(249, 115, 22, 0.08);
+  --color-bg-7: rgba(236, 72, 153, 0.08);
+  --color-bg-8: rgba(6, 182, 212, 0.08);
+
+  /* Semantic Color Tokens (Light Mode) */
+  --color-background: var(--color-cream-50);
+  --color-surface: var(--color-cream-100);
+  --color-text: var(--color-slate-900);
+  --color-text-secondary: var(--color-slate-500);
+  --color-primary: var(--color-teal-500);
+  --color-primary-hover: var(--color-teal-600);
+  --color-primary-active: var(--color-teal-700);
+  --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-secondary-hover: rgba(var(--color-brown-600-rgb), 0.2);
+  --color-secondary-active: rgba(var(--color-brown-600-rgb), 0.25);
+  --color-border: rgba(var(--color-brown-600-rgb), 0.2);
+  --color-btn-primary-text: var(--color-cream-50);
+  --color-card-border: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-card-border-inner: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-error: var(--color-red-500);
+  --color-success: var(--color-teal-500);
+  --color-warning: var(--color-orange-500);
+  --color-info: var(--color-slate-500);
+  --color-focus-ring: rgba(var(--color-teal-500-rgb), 0.4);
+  --color-select-caret: rgba(var(--color-slate-900-rgb), 0.8);
+
+  /* Typography */
+  --font-family-base: "FKGroteskNeue", "Geist", "Inter", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+  --font-size-4xl: 30px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 550;
+  --font-weight-bold: 600;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+
+  /* Spacing */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-base: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+
+  /* Animation */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-gray-400-rgb: 119, 124, 124;
+    --color-teal-300-rgb: 50, 184, 198;
+    --color-gray-300-rgb: 167, 169, 169;
+    --color-gray-200-rgb: 245, 245, 245;
+
+    --color-bg-1: rgba(29, 78, 216, 0.15);
+    --color-bg-2: rgba(180, 83, 9, 0.15);
+    --color-bg-3: rgba(21, 128, 61, 0.15);
+    --color-bg-4: rgba(185, 28, 28, 0.15);
+    --color-bg-5: rgba(107, 33, 168, 0.15);
+    --color-bg-6: rgba(194, 65, 12, 0.15);
+    --color-bg-7: rgba(190, 24, 93, 0.15);
+    --color-bg-8: rgba(8, 145, 178, 0.15);
+
+    --color-background: var(--color-charcoal-700);
+    --color-surface: var(--color-charcoal-800);
+    --color-text: var(--color-gray-200);
+    --color-text-secondary: rgba(var(--color-gray-300-rgb), 0.7);
+    --color-primary: var(--color-teal-300);
+    --color-primary-hover: var(--color-teal-400);
+    --color-primary-active: var(--color-teal-800);
+    --color-secondary: rgba(var(--color-gray-400-rgb), 0.15);
+    --color-secondary-hover: rgba(var(--color-gray-400-rgb), 0.25);
+    --color-secondary-active: rgba(var(--color-gray-400-rgb), 0.3);
+    --color-border: rgba(var(--color-gray-400-rgb), 0.3);
+    --color-error: var(--color-red-400);
+    --color-success: var(--color-teal-300);
+    --color-warning: var(--color-orange-400);
+    --color-info: var(--color-gray-300);
+    --color-focus-ring: rgba(var(--color-teal-300-rgb), 0.4);
+    --color-btn-primary-text: var(--color-slate-900);
+    --color-card-border: rgba(var(--color-gray-400-rgb), 0.2);
+    --color-card-border-inner: rgba(var(--color-gray-400-rgb), 0.15);
+    --color-select-caret: rgba(var(--color-gray-200-rgb), 0.8);
+  }
+}
+
+@font-face {
+  font-family: 'FKGroteskNeue';
+  src: url('https://r2cdn.perplexity.ai/fonts/FKGroteskNeue.woff2') format('woff2');
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  line-height: var(--line-height-normal);
+  font-size: var(--font-size-base);
+}
+
+.app-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-24);
+}
+
+.header {
+  text-align: center;
+  padding: var(--space-32) var(--space-16);
+  margin-bottom: var(--space-24);
+}
+
+.header h1 {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  margin-bottom: var(--space-8);
+}
+
+.header-subtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-24);
+  flex-wrap: wrap;
+  gap: var(--space-16);
+}
+
+.tab-nav {
+  display: flex;
+  gap: var(--space-8);
+  background: var(--color-surface);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-card-border);
+}
+
+.tab-button {
+  padding: var(--space-12) var(--space-24);
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  border-radius: var(--radius-base);
+  transition: all var(--duration-normal) var(--ease-standard);
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.tab-button:hover {
+  background: var(--color-secondary-hover);
+}
+
+.tab-button.active {
+  background: var(--color-primary);
+  color: var(--color-btn-primary-text);
+}
+
+.btn {
+  padding: var(--space-12) var(--space-20);
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-btn-primary-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  border-radius: var(--radius-base);
+  transition: all var(--duration-normal) var(--ease-standard);
+}
+
+.btn:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: var(--color-text);
+}
+
+.btn-secondary:hover {
+  background: var(--color-secondary-hover);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn var(--duration-normal) var(--ease-standard);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Calendar Tab Styles */
+.filters {
+  background: var(--color-surface);
+  padding: var(--space-20);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-card-border);
+  margin-bottom: var(--space-24);
+  display: flex;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.filter-group label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.filter-group select,
+.filter-group input {
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  min-width: 150px;
+}
+
+.calendar-table-container {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-card-border);
+  overflow-x: auto;
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar-table thead {
+  background: var(--color-bg-1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.calendar-table th {
+  padding: var(--space-16);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  border-bottom: 2px solid var(--color-card-border);
+  white-space: nowrap;
+}
+
+.calendar-table td {
+  padding: var(--space-12) var(--space-16);
+  border-bottom: 1px solid var(--color-card-border-inner);
+  font-size: var(--font-size-sm);
+}
+
+.calendar-table tbody tr:hover {
+  background: var(--color-bg-2);
+}
+
+.calendar-table tbody tr:nth-child(even) {
+  background: rgba(var(--color-brown-600-rgb), 0.02);
+}
+
+@media (prefers-color-scheme: dark) {
+  .calendar-table tbody tr:nth-child(even) {
+    background: rgba(var(--color-gray-400-rgb), 0.05);
+  }
+}
+
+.arena-cell {
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-bg-3);
+  vertical-align: top;
+}
+
+.year-2015 {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.year-2016 {
+  color: var(--color-warning);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Assignments Tab Styles */
+.assignments-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-24);
+  min-height: 600px;
+}
+
+@media (max-width: 768px) {
+  .assignments-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.arena-list {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-card-border);
+  padding: var(--space-16);
+  overflow-y: auto;
+  max-height: 700px;
+}
+
+.arena-list h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-16);
+  padding-bottom: var(--space-12);
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.arena-item {
+  padding: var(--space-12);
+  margin-bottom: var(--space-8);
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+  border: 1px solid transparent;
+}
+
+.arena-item:hover {
+  background: var(--color-secondary);
+}
+
+.arena-item.selected {
+  background: var(--color-primary);
+  color: var(--color-btn-primary-text);
+  border-color: var(--color-primary);
+}
+
+.arena-name {
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-base);
+}
+
+.arena-count {
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+}
+
+.assignment-panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-card-border);
+  padding: var(--space-24);
+}
+
+.assignment-panel.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.assignment-header {
+  margin-bottom: var(--space-24);
+  padding-bottom: var(--space-16);
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.assignment-header h3 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-8);
+}
+
+.assignment-header p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.matches-section {
+  margin-bottom: var(--space-24);
+}
+
+.matches-section h4 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-16);
+}
+
+.match-card {
+  background: var(--color-background);
+  padding: var(--space-16);
+  border-radius: var(--radius-base);
+  border: 1px solid var(--color-card-border);
+  margin-bottom: var(--space-12);
+}
+
+.match-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-12);
+  margin-bottom: var(--space-12);
+}
+
+.match-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.match-info-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+}
+
+.match-info-value {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.match-teams {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-12);
+}
+
+.personnel-section h4 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-16);
+}
+
+.form-group {
+  margin-bottom: var(--space-16);
+}
+
+.form-group label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-8);
+  color: var(--color-text);
+}
+
+.form-group input {
+  width: 100%;
+  padding: var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.btn-save {
+  width: 100%;
+  padding: var(--space-16);
+  margin-top: var(--space-8);
+}
+
+.notification {
+  position: fixed;
+  top: var(--space-24);
+  right: var(--space-24);
+  background: var(--color-success);
+  color: var(--color-btn-primary-text);
+  padding: var(--space-16) var(--space-24);
+  border-radius: var(--radius-base);
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  animation: slideIn var(--duration-normal) var(--ease-standard);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.loading {
+  text-align: center;
+  padding: var(--space-32);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.sortable:hover {
+  background: var(--color-secondary);
+}
+
+.sort-icon {
+  display: inline-block;
+  margin-left: var(--space-4);
+  opacity: 0.3;
+}
+
+.sort-icon::after {
+  content: '↕';
+}
+
+.sortable.asc .sort-icon::after {
+  content: '↑';
+  opacity: 1;
+}
+
+.sortable.desc .sort-icon::after {
+  content: '↓';
+  opacity: 1;
+}
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <h1>🏒 Календарь матчей ФХМ</h1>
+      <p class="header-subtitle">Федерация хоккея Москвы</p>
+    </header>
+
+    <div class="controls">
+      <nav class="tab-nav">
+        <button class="tab-button active" data-tab="calendar">
+          <span>📅</span>
+          <span>Календарь</span>
+        </button>
+        <button class="tab-button" data-tab="assignments">
+          <span>👥</span>
+          <span>Назначения</span>
+        </button>
+      </nav>
+      <button class="btn" id="refreshBtn">🔄 Обновить данные</button>
+    </div>
+
+    <!-- Calendar Tab -->
+    <div class="tab-content active" id="calendar-tab">
+      <div class="filters">
+        <div class="filter-group">
+          <label for="yearFilter">Год:</label>
+          <select id="yearFilter">
+            <option value="all">Все</option>
+            <option value="2015">2015</option>
+            <option value="2016">2016</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="searchFilter">Поиск по командам:</label>
+          <input type="text" id="searchFilter" placeholder="Введите название команды">
+        </div>
+        <div class="filter-group">
+          <label for="dateFrom">Дата от:</label>
+          <input type="date" id="dateFrom">
+        </div>
+        <div class="filter-group">
+          <label for="dateTo">Дата до:</label>
+          <input type="date" id="dateTo">
+        </div>
+        <button class="btn btn-secondary" id="resetFilters">Сбросить</button>
+      </div>
+
+      <div class="calendar-table-container">
+        <table class="calendar-table">
+          <thead>
+            <tr>
+              <th class="sortable" data-column="day">День <span class="sort-icon"></span></th>
+              <th class="sortable" data-column="date">Дата <span class="sort-icon"></span></th>
+              <th class="sortable" data-column="tour">Тур <span class="sort-icon"></span></th>
+              <th class="sortable" data-column="game_num">№ игры <span class="sort-icon"></span></th>
+              <th class="sortable" data-column="time">Время <span class="sort-icon"></span></th>
+              <th class="sortable" data-column="year">Год <span class="sort-icon"></span></th>
+              <th class="sortable" data-column="pair">Пара <span class="sort-icon"></span></th>
+              <th class="sortable" data-column="name">Наименование <span class="sort-icon"></span></th>
+              <th>На карте</th>
+              <th class="sortable" data-column="address">Адрес <span class="sort-icon"></span></th>
+            </tr>
+          </thead>
+          <tbody id="calendarBody">
+            <tr><td colspan="10" class="loading">Загрузка данных...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Assignments Tab -->
+    <div class="tab-content" id="assignments-tab">
+      <div class="assignments-container">
+        <div class="arena-list">
+          <h3>Площадки</h3>
+          <div id="arenaListItems"></div>
+        </div>
+        <div class="assignment-panel empty" id="assignmentPanel">
+          <p>Выберите площадку из списка слева</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Match data
+    const matchesData = [
+      { day: 'Пн', date: '28.10.2025', tour: '1', game_num: '101', time: '10:00', year: '2015', pair: 'Спартак - Динамо', name: 'Первенство Москвы', arena: 'Ледовый дворец Крылатское', map: 'https://yandex.ru/maps/', address: 'ул. Крылатская, 10' },
+      { day: 'Пн', date: '28.10.2025', tour: '1', game_num: '102', time: '12:00', year: '2016', pair: 'ЦСКА - Локомотив', name: 'Первенство Москвы', arena: 'Ледовый дворец Крылатское', map: 'https://yandex.ru/maps/', address: 'ул. Крылатская, 10' },
+      { day: 'Пн', date: '28.10.2025', tour: '1', game_num: '103', time: '14:00', year: '2015', pair: 'Торпедо - Салават Юлаев', name: 'Первенство Москвы', arena: 'СК Хоккейный клуб', map: 'https://yandex.ru/maps/', address: 'ул. Лужнецкая, 24' },
+      { day: 'Вт', date: '29.10.2025', tour: '2', game_num: '201', time: '18:00', year: '2016', pair: 'Ак Барс - Авангард', name: 'Первенство Москвы', arena: 'Ледовый дворец Крылатское', map: 'https://yandex.ru/maps/', address: 'ул. Крылатская, 10' },
+      { day: 'Вт', date: '29.10.2025', tour: '2', game_num: '202', time: '19:30', year: '2015', pair: 'Металлург - Трактор', name: 'Первенство Москвы', arena: 'СК Хоккейный клуб', map: 'https://yandex.ru/maps/', address: 'ул. Лужнецкая, 24' },
+      { day: 'Ср', date: '30.10.2025', tour: '3', game_num: '301', time: '17:00', year: '2016', pair: 'Витязь - Северсталь', name: 'Первенство Москвы', arena: 'Арена Мегаспорт', map: 'https://yandex.ru/maps/', address: 'Ходынский бульвар, 3' },
+      { day: 'Ср', date: '30.10.2025', tour: '3', game_num: '302', time: '20:00', year: '2015', pair: 'Барыс - Куньлунь', name: 'Первенство Москвы', arena: 'Арена Мегаспорт', map: 'https://yandex.ru/maps/', address: 'Ходынский бульвар, 3' },
+      { day: 'Чт', date: '31.10.2025', tour: '4', game_num: '401', time: '16:00', year: '2016', pair: 'СКА - Йокерит', name: 'Первенство Москвы', arena: 'Ледовый дворец Крылатское', map: 'https://yandex.ru/maps/', address: 'ул. Крылатская, 10' },
+      { day: 'Чт', date: '31.10.2025', tour: '4', game_num: '402', time: '18:30', year: '2015', pair: 'Нефтехимик - Сибирь', name: 'Первенство Москвы', arena: 'СК Хоккейный клуб', map: 'https://yandex.ru/maps/', address: 'ул. Лужнецкая, 24' },
+      { day: 'Пт', date: '01.11.2025', tour: '5', game_num: '501', time: '19:00', year: '2016', pair: 'Амур - Адмирал', name: 'Первенство Москвы', arena: 'Арена Мегаспорт', map: 'https://yandex.ru/maps/', address: 'Ходынский бульвар, 3' }
+    ];
+
+    let currentMatches = [...matchesData];
+    let selectedArena = null;
+    let assignments = {};
+    let currentSort = { column: null, direction: 'asc' };
+
+    // Initialize app
+    function initApp() {
+      renderCalendar(currentMatches);
+      initArenaList();
+      setupEventListeners();
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Tab switching
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Filters
+      document.getElementById('yearFilter').addEventListener('change', applyFilters);
+      document.getElementById('searchFilter').addEventListener('input', applyFilters);
+      document.getElementById('dateFrom').addEventListener('change', applyFilters);
+      document.getElementById('dateTo').addEventListener('change', applyFilters);
+      document.getElementById('resetFilters').addEventListener('click', resetFilters);
+
+      // Refresh button
+      document.getElementById('refreshBtn').addEventListener('click', () => {
+        showNotification('Данные обновлены');
+        currentMatches = [...matchesData];
+        applyFilters();
+      });
+
+      // Column sorting
+      document.querySelectorAll('.sortable').forEach(th => {
+        th.addEventListener('click', () => sortByColumn(th.dataset.column));
+      });
+    }
+
+    // Switch tabs
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `${tabName}-tab`);
+      });
+    }
+
+    // Render calendar with rowspan for consecutive same addresses
+    function renderCalendar(matches) {
+      const tbody = document.getElementById('calendarBody');
+      if (matches.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="loading">Нет данных для отображения</td></tr>';
+        return;
+      }
+
+      let html = '';
+      let prevAddress = null;
+      let addressRowspan = 0;
+      let addressStartIndex = -1;
+
+      // First pass: calculate rowspans for addresses
+      const rowspanMap = {};
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        if (match.address !== prevAddress) {
+          if (addressStartIndex >= 0) {
+            rowspanMap[addressStartIndex] = addressRowspan;
+          }
+          prevAddress = match.address;
+          addressStartIndex = i;
+          addressRowspan = 1;
+        } else {
+          addressRowspan++;
+        }
+      }
+      if (addressStartIndex >= 0) {
+        rowspanMap[addressStartIndex] = addressRowspan;
+      }
+
+      // Second pass: render rows
+      prevAddress = null;
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        const showAddress = match.address !== prevAddress;
+        
+        html += '<tr>';
+        html += `<td>${match.day}</td>`;
+        html += `<td>${match.date}</td>`;
+        html += `<td>${match.tour}</td>`;
+        html += `<td>${match.game_num}</td>`;
+        html += `<td>${match.time}</td>`;
+        html += `<td><span class="year-${match.year}">${match.year}</span></td>`;
+        html += `<td>${match.pair}</td>`;
+        html += `<td>${match.name}</td>`;
+        html += `<td><a href="${match.map}" target="_blank" title="Открыть на карте">🗺️</a></td>`;
+        
+        if (showAddress) {
+          const rowspan = rowspanMap[i] || 1;
+          html += `<td class="arena-cell" rowspan="${rowspan}">${match.address}</td>`;
+          prevAddress = match.address;
+        }
+        
+        html += '</tr>';
+      }
+
+      tbody.innerHTML = html;
+    }
+
+
+
+    // Apply filters
+    function applyFilters() {
+      const yearFilter = document.getElementById('yearFilter').value;
+      const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+
+      let filtered = [...matchesData];
+
+      if (yearFilter !== 'all') {
+        filtered = filtered.filter(m => m.year === yearFilter);
+      }
+
+      if (searchFilter) {
+        filtered = filtered.filter(m => m.pair.toLowerCase().includes(searchFilter));
+      }
+
+      if (dateFrom) {
+        const fromDate = parseDateRu(dateFrom);
+        filtered = filtered.filter(m => {
+          const matchDate = parseRuDate(m.date);
+          return matchDate >= fromDate;
+        });
+      }
+
+      if (dateTo) {
+        const toDate = parseDateRu(dateTo);
+        filtered = filtered.filter(m => {
+          const matchDate = parseRuDate(m.date);
+          return matchDate <= toDate;
+        });
+      }
+
+      currentMatches = filtered;
+      renderCalendar(currentMatches);
+    }
+
+    // Reset filters
+    function resetFilters() {
+      document.getElementById('yearFilter').value = 'all';
+      document.getElementById('searchFilter').value = '';
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      currentMatches = [...matchesData];
+      renderCalendar(currentMatches);
+    }
+
+    // Parse Russian date format (dd.mm.yyyy)
+    function parseRuDate(dateStr) {
+      const [day, month, year] = dateStr.split('.');
+      return new Date(year, month - 1, day);
+    }
+
+    // Parse ISO date format (yyyy-mm-dd)
+    function parseDateRu(dateStr) {
+      return new Date(dateStr);
+    }
+
+    // Initialize arena list for assignments
+    function initArenaList() {
+      const arenas = [...new Set(matchesData.map(m => m.arena))].sort();
+      const container = document.getElementById('arenaListItems');
+      
+      arenas.forEach(arena => {
+        const matchCount = matchesData.filter(m => m.arena === arena).length;
+        const div = document.createElement('div');
+        div.className = 'arena-item';
+        div.dataset.arena = arena;
+        div.innerHTML = `
+          <div class="arena-name">${arena}</div>
+          <div class="arena-count">${matchCount} ${matchCount === 1 ? 'матч' : matchCount < 5 ? 'матча' : 'матчей'}</div>
+        `;
+        div.addEventListener('click', () => selectArena(arena));
+        container.appendChild(div);
+      });
+    }
+
+    // Select arena and show assignment panel
+    function selectArena(arena) {
+      selectedArena = arena;
+      
+      // Update selection UI
+      document.querySelectorAll('.arena-item').forEach(item => {
+        item.classList.toggle('selected', item.dataset.arena === arena);
+      });
+
+      // Render assignment panel
+      const matches = matchesData.filter(m => m.arena === arena);
+      const panel = document.getElementById('assignmentPanel');
+      panel.classList.remove('empty');
+      
+      const arenaAddress = matches[0].address;
+      
+      let html = `
+        <div class="assignment-header">
+          <h3>${arena}</h3>
+          <p>${arenaAddress}</p>
+        </div>
+        
+        <div class="matches-section">
+          <h4>Матчи (${matches.length})</h4>
+      `;
+
+      matches.forEach(match => {
+        html += `
+          <div class="match-card">
+            <div class="match-teams">${match.pair}</div>
+            <div class="match-info">
+              <div class="match-info-item">
+                <span class="match-info-label">Дата</span>
+                <span class="match-info-value">${match.day}, ${match.date}</span>
+              </div>
+              <div class="match-info-item">
+                <span class="match-info-label">Время</span>
+                <span class="match-info-value">${match.time}</span>
+              </div>
+              <div class="match-info-item">
+                <span class="match-info-label">Тур</span>
+                <span class="match-info-value">${match.tour}</span>
+              </div>
+              <div class="match-info-item">
+                <span class="match-info-label">№ игры</span>
+                <span class="match-info-value">${match.game_num}</span>
+              </div>
+              <div class="match-info-item">
+                <span class="match-info-label">Год</span>
+                <span class="match-info-value">${match.year}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `
+        </div>
+        
+        <div class="personnel-section">
+          <h4>Назначение персонала</h4>
+          <div class="form-group">
+            <label for="main-referee">Главный судья</label>
+            <input type="text" id="main-referee" value="${assignments[arena]?.mainReferee || ''}" placeholder="Введите имя главного судьи">
+          </div>
+          <div class="form-group">
+            <label for="referee1">Судья 1</label>
+            <input type="text" id="referee1" value="${assignments[arena]?.referee1 || ''}" placeholder="Введите имя судьи 1">
+          </div>
+          <div class="form-group">
+            <label for="referee2">Судья 2</label>
+            <input type="text" id="referee2" value="${assignments[arena]?.referee2 || ''}" placeholder="Введите имя судьи 2">
+          </div>
+          <div class="form-group">
+            <label for="scorer">Секретарь</label>
+            <input type="text" id="scorer" value="${assignments[arena]?.scorer || ''}" placeholder="Введите имя секретаря">
+          </div>
+          <div class="form-group">
+            <label for="timekeeper">Секундометрист</label>
+            <input type="text" id="timekeeper" value="${assignments[arena]?.timekeeper || ''}" placeholder="Введите имя секундометриста">
+          </div>
+          <button class="btn btn-save" onclick="saveAssignment()">💾 Сохранить назначения</button>
+        </div>
+      `;
+
+      panel.innerHTML = html;
+    }
+
+    // Save assignment (in memory only)
+    function saveAssignment() {
+      if (!selectedArena) return;
+      
+      const mainReferee = document.getElementById('main-referee').value;
+      const referee1 = document.getElementById('referee1').value;
+      const referee2 = document.getElementById('referee2').value;
+      const scorer = document.getElementById('scorer').value;
+      const timekeeper = document.getElementById('timekeeper').value;
+      
+      assignments[selectedArena] = {
+        mainReferee: mainReferee,
+        referee1: referee1,
+        referee2: referee2,
+        scorer: scorer,
+        timekeeper: timekeeper
+      };
+      
+      showNotification(`Назначения для "${selectedArena}" сохранены`);
+    }
+
+    // Show notification
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Sort by column
+    function sortByColumn(column) {
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+      }
+
+      // Update sort icons
+      document.querySelectorAll('.sortable').forEach(th => {
+        th.classList.remove('asc', 'desc');
+        if (th.dataset.column === column) {
+          th.classList.add(currentSort.direction);
+        }
+      });
+
+      // Sort matches
+      currentMatches.sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+
+        // Special handling for date
+        if (column === 'date') {
+          valA = parseRuDate(valA).getTime();
+          valB = parseRuDate(valB).getTime();
+        }
+        // Special handling for numeric columns
+        else if (column === 'tour' || column === 'game_num' || column === 'year') {
+          valA = parseInt(valA);
+          valB = parseInt(valB);
+        }
+        // Special handling for time
+        else if (column === 'time') {
+          valA = valA.split(':').map(Number);
+          valB = valB.split(':').map(Number);
+          valA = valA[0] * 60 + valA[1];
+          valB = valB[0] * 60 + valB[1];
+        }
+        // String comparison
+        else {
+          valA = String(valA).toLowerCase();
+          valB = String(valB).toLowerCase();
+        }
+
+        if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      renderCalendar(currentMatches);
+    }
+
+    // Initialize app on load
+    initApp();
+  </script>
+</body>
+</html>
