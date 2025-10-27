@@ -1,0 +1,39 @@
+name: Update FHM Calendar
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Каждые 6 часов
+  workflow_dispatch:        # Возможность запустить вручную
+
+jobs:
+  update-calendar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright python-dotenv
+          playwright install chromium
+
+      - name: Create .env file
+        run: |
+          echo "FHMO_LOGIN=${{ secrets.FHMO_LOGIN }}" >> .env
+          echo "FHMO_PASS=${{ secrets.FHMO_PASS }}" >> .env
+
+      - name: Run parser
+        run: python3 fhm_parser_backend_v2.py
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+          git add matches_data.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🔄 Auto-update calendar data $(date '+%Y-%m-%d %H:%M')" && git push)
