@@ -27,7 +27,7 @@ if not LOGIN or not PASSWORD:
 
 
 def parse_date_str(date_str):
-    """Парсит строку вида 1.10.2025 или 01.10.2025"""
+    """Парсит дату DD.MM.YYYY"""
     try:
         d, m, y = map(int, str(date_str).strip().split('.'))
         return date(y, m, d)
@@ -36,7 +36,7 @@ def parse_date_str(date_str):
 
 
 def main():
-    """ТОЧНАЯ КОПИЯ ОРИГИНАЛЬНОЙ ЛОГИКИ"""
+    """БЕЗ wait_for_function - прямой парсинг"""
     with sync_playwright() as p:
         logger.info("🌐 Запускаем браузер...")
         browser = p.chromium.launch(headless=True)
@@ -47,52 +47,34 @@ def main():
         page = context.new_page()
 
         try:
+            # Авторизация
             logger.info("🔐 Авторизация...")
-            for attempt in range(3):
-                try:
-                    page.goto(LOGIN_URL, timeout=30000)
-                    page.wait_for_load_state('domcontentloaded')
-                    logger.info("✅ Страница загружена")
-                    break
-                except PlaywrightTimeoutError:
-                    logger.warning(f"⚠️ Попытка {attempt + 1}/3")
-                    if attempt == 2:
-                        raise Exception("Не удалось загрузить страницу")
+            page.goto(LOGIN_URL, timeout=30000)
+            page.wait_for_load_state('domcontentloaded')
+            logger.info("✅ Страница входа загружена")
 
-            logger.info("📝 Ввод логина/пароля...")
             page.fill('input[name="login"]', LOGIN)
             page.fill('input[name="password"]', PASSWORD)
 
-            # Поиск кнопки - ТОЧНО КАК В ОРИГИНАЛЕ
-            logger.info("🖱 Поиск кнопки входа...")
+            # Поиск кнопки
             button_clicked = False
             selectors = [
                 'input[type="submit"]',
-                'input[value="Войти"]',
                 'button[type="submit"]',
-                'button:has-text("Войти")',
-                'button:has-text("Вход")',
                 'form button',
-                'button >> text="Войти"',
+                'input[value="Войти"]',
                 '//input[@type="submit"]',
-                '//button[contains(text(), "Войти")]',
-                '//button[contains(text(), "Вход")]',
-                '//button[@type="submit"]',
-                '//form//button',
             ]
 
             for selector in selectors:
                 try:
                     locator = page.locator(selector)
-                    count = locator.count()
-                    for i in range(count):
-                        if locator.nth(i).is_visible():
-                            locator.nth(i).click()
+                    if locator.count() > 0:
+                        if locator.first.is_visible():
+                            locator.first.click()
                             logger.info(f"✅ Кнопка нажата: {selector}")
                             button_clicked = True
                             break
-                    if button_clicked:
-                        break
                 except:
                     continue
 
@@ -102,141 +84,154 @@ def main():
 
             page.wait_for_timeout(2000)
 
-            logger.info("⏳ Загрузка vsporte.php...")
+            # Переход на календарь
+            logger.info("📅 Загрузка vsporte.php...")
             page.goto(TARGET_URL, timeout=30000)
-            page.wait_for_load_state('domcontentloaded')
+            page.wait_for_load_state('networkidle', timeout=30000)  # Ждем ПОЛНУЮ загрузку
+            logger.info("✅ Страница календаря загружена")
 
-            # Ждём таблицу - ТОЧНО КАК В ОРИГИНАЛЕ
-            logger.info("⏳ Ожидаем таблицу 'БЛИЖАЙШИЕ МАТЧИ'...")
-            page.wait_for_function("""
-                () => {
-                    const th = Array.from(document.querySelectorAll('th'))
-                        .find(el => el.textContent.includes('БЛИЖАЙШИЕ МАТЧИ'));
-                    if (!th) return false;
-                    const table = th.closest('table');
-                    const rows = table.querySelectorAll('tr:has(td)');
-                    return rows.length > 0;
-                }
-            """, timeout=15000)
+            # Дополнительное ожидание
+            page.wait_for_timeout(5000)  # 5 секунд на всякий случай
 
-            # Получаем таблицу - ТОЧНЫЙ XPATH
-            table_locator = page.locator('//th[contains(., "БЛИЖАЙШИЕ МАТЧИ")]/ancestor::table')
+            # Сохраняем HTML для анализа
+            html_content = page.content()
+            with open('vsporte_page.html', 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            page.screenshot(path='vsporte_screenshot.png', full_page=True)
+            logger.info("💾 Сохранены vsporte_page.html и vsporte_screenshot.png")
+
+            # ПАРСИНГ БЕЗ ОЖИДАНИЯ - сразу пытаемся найти таблицу
+            logger.info("🔍 Ищем таблицу (без wait_for_function)...")
+
+            # Пробуем XPath
+            table_locator = None
+            try:
+                table_locator = page.locator('//th[contains(., "БЛИЖАЙШИЕ МАТЧИ")]/ancestor::table')
+                if table_locator.count() > 0:
+                    logger.info("✅ Таблица найдена через XPath")
+                else:
+                    logger.warning("⚠️ XPath не нашел таблицу")
+                    table_locator = None
+            except Exception as e:
+                logger.warning(f"⚠️ XPath ошибка: {e}")
+
+            # Если не нашли - ищем любые таблицы
+            if not table_locator or table_locator.count() == 0:
+                logger.info("🔍 Ищем любые таблицы на странице...")
+                tables = page.locator('table').all()
+                logger.info(f"  Найдено таблиц: {len(tables)}")
+
+                for i, table in enumerate(tables):
+                    try:
+                        text = table.inner_text()
+                        rows = len(table.locator('tr').all())
+                        logger.info(f"  Таблица {i+1}: {rows} строк, содержит текст: {text[:100]}")
+
+                        # Ищем таблицу с "БЛИЖАЙШ" или просто большую
+                        if 'БЛИЖАЙШ' in text or 'МАТЧ' in text or rows > 10:
+                            table_locator = page.locator('table').nth(i)
+                            logger.info(f"✅ Используем таблицу {i+1}")
+                            break
+                    except Exception as e:
+                        logger.debug(f"  Таблица {i+1}: ошибка {e}")
+
+            if not table_locator or table_locator.count() == 0:
+                logger.error("❌ Таблица не найдена!")
+                logger.info("📁 Проверьте vsporte_page.html и vsporte_screenshot.png")
+                raise Exception("Таблица с матчами не найдена")
+
+            # ПАРСИНГ СТРОК
             row_locators = table_locator.locator('tr:has(td)').all()
+            logger.info(f"📊 Найдено строк: {len(row_locators)}")
 
-            logger.info(f"🔍 Найдено строк: {len(row_locators)}")
+            if len(row_locators) == 0:
+                logger.warning("⚠️ Таблица пустая!")
+                # Пробуем все tr без фильтра
+                row_locators = table_locator.locator('tr').all()
+                logger.info(f"  Всего строк в таблице: {len(row_locators)}")
 
-            # ПАРСИМ ВСЕ СТРОКИ (не фильтруем здесь!)
-            data = []
-            for row in row_locators:
-                cells = row.locator('td').all()
-                if len(cells) < 8:
-                    continue
-
-                texts = [cell.inner_text().strip() for cell in cells]
-
-                # Формируем пару - ТОЧНО КАК В ОРИГИНАЛЕ
-                pair = " – ".join(filter(None, [texts[6], texts[7]])) if len(texts) > 7 else ""
-
-                # full_row - ТОЧНАЯ СТРУКТУРА
-                full_row = texts[:6] + [pair] + texts[8:11]
-                while len(full_row) < 10:
-                    full_row.append("")
-
-                data.append(full_row)
-
-            logger.info(f"📋 Всего строк: {len(data)}")
-
-            # ФИЛЬТРАЦИЯ - КАК В ОРИГИНАЛЕ (после парсинга!)
             today = date.today()
-            filtered_data = []
-
-            for row in data:
-                date_str = row[1]  # Дата во втором столбце
-                match_date = parse_date_str(date_str)
-
-                # ФИЛЬТР: только даты > today
-                if match_date and match_date > today:
-                    filtered_data.append(row)
-
-            logger.info(f"✅ Отобрано {len(filtered_data)} матчей (дата > {today.strftime('%d.%m.%Y')})")
-
-            # Конвертируем в JSON формат
             matches = []
-            for row in filtered_data:
-                match = {
-                    'day': row[0],
-                    'date': row[1],
-                    'tour': row[2],
-                    'game_num': row[3],
-                    'time': row[4],
-                    'year': row[5],
-                    'pair': row[6],
-                    'name': row[7] if row[7] else 'Первенство Москвы',
-                    'map': row[8] if row[8] else 'https://yandex.ru/maps/',
-                    'address': row[9]
-                }
-                matches.append(match)
 
-            # Извлекаем арены из пары (берем первую команду как примерное название арены)
-            # На самом деле арена в текстах[8], но мы её не брали
-            # Давайте добавим arena из исходных данных
+            for idx, row in enumerate(row_locators):
+                try:
+                    cells = row.locator('td').all()
+                    if len(cells) < 8:
+                        logger.debug(f"  Строка {idx}: мало ячеек ({len(cells)})")
+                        continue
 
-            # ПЕРЕПАРСИМ с ареной
-            matches_with_arena = []
-            for row in row_locators:
-                cells = row.locator('td').all()
-                if len(cells) < 8:
-                    continue
+                    texts = [cell.inner_text().strip() for cell in cells]
 
-                texts = [cell.inner_text().strip() for cell in cells]
+                    # Извлекаем данные
+                    day = texts[0] if len(texts) > 0 else ''
+                    date_str = texts[1] if len(texts) > 1 else ''
+                    tour = texts[2] if len(texts) > 2 else ''
+                    game_num = texts[3] if len(texts) > 3 else ''
+                    time_str = texts[4] if len(texts) > 4 else ''
+                    year = texts[5] if len(texts) > 5 else ''
+                    team1 = texts[6].split('\n')[0] if len(texts) > 6 else ''
+                    team2 = texts[7].split('\n')[0] if len(texts) > 7 else ''
+                    arena = texts[8] if len(texts) > 8 else ''
+                    address = texts[10] if len(texts) > 10 else ''
 
-                date_str = texts[1] if len(texts) > 1 else ''
-                match_date = parse_date_str(date_str)
+                    # Проверка даты
+                    match_date = parse_date_str(date_str)
+                    if not match_date:
+                        logger.debug(f"  Строка {idx}: некорректная дата '{date_str}'")
+                        continue
 
-                if not match_date or match_date <= today:
-                    continue
+                    if match_date <= today:
+                        logger.debug(f"  Строка {idx}: старая дата {date_str}")
+                        continue
 
-                pair = " – ".join(filter(None, [texts[6], texts[7]])) if len(texts) > 7 else ""
-                arena = texts[8] if len(texts) > 8 else ''
+                    # Пара
+                    pair = f"{team1} – {team2}" if team1 and team2 else ""
 
-                match = {
-                    'day': texts[0] if len(texts) > 0 else '',
-                    'date': date_str,
-                    'tour': texts[2] if len(texts) > 2 else '',
-                    'game_num': texts[3] if len(texts) > 3 else '',
-                    'time': texts[4] if len(texts) > 4 else '',
-                    'year': texts[5] if len(texts) > 5 else '',
-                    'pair': pair,
-                    'name': 'Первенство Москвы',
-                    'arena': arena,
-                    'map': 'https://yandex.ru/maps/',
-                    'address': texts[10] if len(texts) > 10 else ''
-                }
-                matches_with_arena.append(match)
+                    match = {
+                        'day': day,
+                        'date': date_str,
+                        'tour': tour,
+                        'game_num': game_num,
+                        'time': time_str,
+                        'year': year,
+                        'pair': pair,
+                        'name': 'Первенство Москвы',
+                        'arena': arena,
+                        'map': 'https://yandex.ru/maps/',
+                        'address': address
+                    }
 
-            # Сохраняем
-            arenas = sorted(list(set(m['arena'] for m in matches_with_arena if m['arena'])))
+                    matches.append(match)
+                    logger.info(f"  ✅ Строка {idx}: {pair} ({date_str})")
+
+                except Exception as e:
+                    logger.debug(f"  Строка {idx}: ошибка {e}")
+
+            logger.info(f"✅ Спарсено {len(matches)} матчей")
+
+            # Сохранение
+            arenas = sorted(list(set(m['arena'] for m in matches if m['arena'])))
 
             output = {
-                'matches': matches_with_arena,
+                'matches': matches,
                 'arenas': arenas,
                 'last_update': datetime.now().strftime('%d.%m.%Y %H:%M:%S'),
-                'total_matches': len(matches_with_arena)
+                'total_matches': len(matches)
             }
 
             with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
                 json.dump(output, f, ensure_ascii=False, indent=2)
 
             logger.info(f"💾 Сохранено в {OUTPUT_FILE}")
-            logger.info(f"📊 Матчей: {len(matches_with_arena)} | Арен: {len(arenas)}")
+            logger.info(f"📊 Матчей: {len(matches)} | Арен: {len(arenas)}")
             logger.info("="*60)
             logger.info("✅ ГОТОВО!")
             logger.info("="*60)
 
         except Exception as e:
             logger.error(f"❌ Ошибка: {e}")
-            page.screenshot(path='error_screenshot.png')
-            # Создаем пустой JSON чтобы сайт не сломался
+            page.screenshot(path='fatal_error.png', full_page=True)
+            # Создаем пустой JSON
             try:
                 with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
                     json.dump({
@@ -248,7 +243,6 @@ def main():
                 logger.info("💾 Создан пустой JSON")
             except:
                 pass
-            raise
         finally:
             browser.close()
 
