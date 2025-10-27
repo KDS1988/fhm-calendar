@@ -4,7 +4,6 @@
 FHM Calendar Parser - Backend для веб-приложения (обновленная версия)
 Парсит календарь матчей с referee.fhmoscow.com и сохраняет в JSON
 """
-
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from datetime import date, datetime, timedelta
 from dotenv import load_dotenv
@@ -115,24 +114,79 @@ def parse_matches():
             logger.info("📅 Загружаем календарь...")
             page.goto(TARGET_URL, timeout=30000)
             page.wait_for_load_state('domcontentloaded')
+            page.wait_for_timeout(3000)  # Увеличиваем ожидание
 
-            # Ожидание таблицы
-            page.wait_for_function("""
-                () => {
-                    const th = Array.from(document.querySelectorAll('th'))
-                        .find(el => el.textContent.includes('БЛИЖАЙШИЕ МАТЧИ'));
-                    if (!th) return false;
-                    const table = th.closest('table');
-                    const rows = table.querySelectorAll('tr:has(td)');
-                    return rows.length > 0;
-                }
-            """, timeout=15000)
+            # УЛУЧШЕННАЯ ЛОГИКА: Попробуем разные способы найти таблицу
+            table_locator = None
 
-            # Парсинг таблицы
-            table_locator = page.locator('th:has-text("БЛИЖАЙШИЕ МАТЧИ")').locator('xpath=ancestor::table')
+            # Способ 1: Ищем по тексту заголовка
+            try:
+                logger.info("🔍 Попытка 1: Поиск по заголовку 'БЛИЖАЙШИЕ МАТЧИ'...")
+                table_locator = page.locator('th:has-text("БЛИЖАЙШИЕ МАТЧИ")').locator('xpath=ancestor::table').first
+                if table_locator.count() > 0:
+                    logger.info("✅ Таблица найдена (способ 1)")
+            except:
+                logger.warning("⚠️ Способ 1 не сработал")
+
+            # Способ 2: Ищем таблицу с классом или id (если есть)
+            if not table_locator or table_locator.count() == 0:
+                try:
+                    logger.info("🔍 Попытка 2: Поиск всех таблиц...")
+                    # Берем все таблицы и ищем ту, что содержит нужные данные
+                    tables = page.locator('table').all()
+                    for i, table in enumerate(tables):
+                        try:
+                            # Проверяем, есть ли в таблице текст "БЛИЖАЙШИЕ" или заголовки колонок
+                            text = table.inner_text()
+                            if 'БЛИЖАЙШИЕ' in text or 'День' in text:
+                                table_locator = page.locator(f'table').nth(i)
+                                logger.info(f"✅ Таблица найдена (способ 2, индекс {i})")
+                                break
+                        except:
+                            continue
+                except Exception as e:
+                    logger.warning(f"⚠️ Способ 2 не сработал: {e}")
+
+            # Способ 3: Берем последнюю большую таблицу на странице
+            if not table_locator or table_locator.count() == 0:
+                try:
+                    logger.info("🔍 Попытка 3: Берем самую большую таблицу...")
+                    tables = page.locator('table').all()
+                    max_rows = 0
+                    max_index = 0
+                    for i, table in enumerate(tables):
+                        try:
+                            rows = table.locator('tr').count()
+                            if rows > max_rows:
+                                max_rows = rows
+                                max_index = i
+                        except:
+                            continue
+
+                    if max_rows > 5:  # Минимум 5 строк
+                        table_locator = page.locator('table').nth(max_index)
+                        logger.info(f"✅ Таблица найдена (способ 3, {max_rows} строк)")
+                except Exception as e:
+                    logger.warning(f"⚠️ Способ 3 не сработал: {e}")
+
+            if not table_locator or table_locator.count() == 0:
+                # Сохраняем скриншот и HTML для отладки
+                page.screenshot(path='debug_screenshot.png')
+                with open('debug_page.html', 'w', encoding='utf-8') as f:
+                    f.write(page.content())
+                logger.error("❌ Не удалось найти таблицу с матчами")
+                logger.info("💾 Сохранены debug_screenshot.png и debug_page.html для отладки")
+                raise Exception("Таблица с матчами не найдена")
+
+            # Парсинг строк таблицы
             row_locators = table_locator.locator('tr:has(td)').all()
+            logger.info(f"🔍 Найдено строк в таблице: {len(row_locators)}")
 
-            logger.info(f"🔍 Найдено строк: {len(row_locators)}")
+            if len(row_locators) == 0:
+                logger.warning("⚠️ Таблица найдена, но строк с данными нет")
+                # Попробуем все tr без фильтра
+                row_locators = table_locator.locator('tr').all()
+                logger.info(f"🔍 Всего строк (включая заголовки): {len(row_locators)}")
 
             for row in row_locators:
                 cells = row.locator('td').all()
@@ -161,19 +215,19 @@ def parse_matches():
                 except:
                     pass
 
-                # Формируем объект матча с НОВОЙ СТРУКТУРОЙ
+                # Формируем объект матча
                 match = {
-                    'day': texts[0] if len(texts) > 0 else '',           # День
-                    'date': texts[1] if len(texts) > 1 else '',          # Дата
-                    'tour': texts[2] if len(texts) > 2 else '',          # Тур
-                    'game_num': texts[3] if len(texts) > 3 else '',      # № игры
-                    'time': texts[4] if len(texts) > 4 else '',          # Время
-                    'year': texts[5] if len(texts) > 5 else '',          # Год
-                    'pair': pair,                                         # Пара (команды)
-                    'name': 'Первенство Москвы',                         # Наименование (можно парсить если есть)
-                    'arena': arena,                                       # Площадка (для внутренней логики)
-                    'map': map_link if map_link else 'https://yandex.ru/maps/', # На карте
-                    'address': address                                    # Адрес
+                    'day': texts[0] if len(texts) > 0 else '',
+                    'date': texts[1] if len(texts) > 1 else '',
+                    'tour': texts[2] if len(texts) > 2 else '',
+                    'game_num': texts[3] if len(texts) > 3 else '',
+                    'time': texts[4] if len(texts) > 4 else '',
+                    'year': texts[5] if len(texts) > 5 else '',
+                    'pair': pair,
+                    'name': 'Первенство Москвы',
+                    'arena': arena,
+                    'map': map_link if map_link else 'https://yandex.ru/maps/',
+                    'address': address
                 }
 
                 # Фильтр: только будущие матчи
@@ -187,7 +241,11 @@ def parse_matches():
             logger.error(f"❌ Ошибка парсинга: {e}")
             try:
                 page.screenshot(path='error_screenshot.png')
-                logger.info("📸 Скриншот ошибки сохранен")
+                logger.info("📸 Скриншот ошибки сохранен: error_screenshot.png")
+                # Сохраняем HTML для отладки
+                with open('error_page.html', 'w', encoding='utf-8') as f:
+                    f.write(page.content())
+                logger.info("📄 HTML страницы сохранен: error_page.html")
             except:
                 pass
             raise
@@ -227,13 +285,7 @@ def save_to_json(matches, filename=OUTPUT_FILE):
         example = matches[0]
         logger.info(f"  День: {example['day']}")
         logger.info(f"  Дата: {example['date']}")
-        logger.info(f"  Тур: {example['tour']}")
-        logger.info(f"  № игры: {example['game_num']}")
-        logger.info(f"  Время: {example['time']}")
-        logger.info(f"  Год: {example['year']}")
         logger.info(f"  Пара: {example['pair']}")
-        logger.info(f"  Наименование: {example['name']}")
-        logger.info(f"  На карте: {example['map']}")
         logger.info(f"  Адрес: {example['address']}")
 
 
@@ -241,7 +293,7 @@ def main():
     """Основная функция"""
     try:
         logger.info("=" * 60)
-        logger.info("FHM Calendar Parser - Запуск (обновленная версия)")
+        logger.info("FHM Calendar Parser - Запуск (улучшенная версия v3)")
         logger.info("=" * 60)
 
         # Парсинг
