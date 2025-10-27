@@ -3,7 +3,11 @@ name: Update FHM Calendar
 on:
   schedule:
     - cron: '0 */6 * * *'  # Каждые 6 часов
-  workflow_dispatch:        # Возможность запустить вручную
+  workflow_dispatch:        # Ручной запуск
+
+# ИСПРАВЛЕНИЕ: Добавляем права для GITHUB_TOKEN
+permissions:
+  contents: write  # Разрешаем запись в репозиторий
 
 jobs:
   update-calendar:
@@ -12,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # Используем стандартный токен
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -33,7 +39,8 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          git config --global user.name 'GitHub Actions Bot'
-          git config --global user.email 'actions@github.com'
+          git config --local user.name 'GitHub Actions Bot'
+          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
           git add matches_data.json
+          git add -f page_screenshot.png page_source.html 2>/dev/null || true
           git diff --quiet && git diff --staged --quiet || (git commit -m "🔄 Auto-update calendar data $(date '+%Y-%m-%d %H:%M')" && git push)
