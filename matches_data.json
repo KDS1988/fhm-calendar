@@ -1,7 +1,7 @@
 {
   "matches": [],
   "arenas": [],
-  "last_update": "28.10.2025 12:47:31",
+  "last_update": "28.10.2025 12:50:38",
   "total_matches": 0,
-  "error": "Ни одной таблицы не найдено"
+  "error": "Frame.fill() missing 1 required positional argument: 'value'"
 }
