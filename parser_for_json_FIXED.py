@@ -17,6 +17,10 @@ LOGIN = os.getenv('FHMO_LOGIN')
 PASSWORD = os.getenv('FHMO_PASS')
 OUTPUT_FILE = 'matches_data.json'
 
+if not LOGIN or not PASSWORD:
+    raise EnvironmentError("❌ FHMO_LOGIN и FHMO_PASS обязательны!")
+
+
 def parse_date_str(date_str):
     """Парсит строку вида 1.10.2025 или 01.10.2025"""
     try:
@@ -24,6 +28,7 @@ def parse_date_str(date_str):
         return date(y, m, d)
     except:
         return None
+
 
 def main():
     with sync_playwright() as p:
@@ -49,10 +54,11 @@ def main():
                         raise Exception("❌ Не удалось загрузить страницу после 3 попыток")
             
             print("📝 Вводим логин и пароль...")
-            page.fill('input[name="login"]', LOGIN)
-            page.fill('input[name="password"]', PASSWORD)
+            # ИСПРАВЛЕНО: правильный синтаксис fill()
+            page.locator('input[name="login"]').fill(LOGIN)
+            page.locator('input[name="password"]').fill(PASSWORD)
             
-            # === ИЩЕМ КНОПКУ ВХОДА - ТОЧНО КАК В ВАШЕМ КОДЕ ===
+            # Поиск кнопки
             print("🖱 Пытаемся найти кнопку входа...")
             button_clicked = False
             selectors = [
@@ -96,7 +102,7 @@ def main():
             page.goto(TARGET_URL, timeout=30000)
             page.wait_for_load_state('domcontentloaded')
             
-            # === ТОЧНО КАК В ВАШЕМ РАБОЧЕМ КОДЕ ===
+            # Ожидание таблицы
             print("⏳ Ожидаем таблицу 'БЛИЖАЙШИЕ МАТЧИ'...")
             page.wait_for_function("""
                 () => {
@@ -109,13 +115,13 @@ def main():
                 }
             """, timeout=15000)
             
-            # Получаем таблицу - ТОЧНО КАК В ВАШЕМ КОДЕ
+            # Получаем таблицу
             table_locator = page.locator('//th[contains(., "БЛИЖАЙШИЕ МАТЧИ")]/ancestor::table')
             row_locators = table_locator.locator('tr:has(td)').all()
             
             print(f"🔍 Найдено строк с данными: {len(row_locators)}")
             
-            # === ПАРСИНГ - ТОЧНО КАК В ВАШЕМ КОДЕ ===
+            # Парсинг
             data = []
             for row in row_locators:
                 cells = row.locator('td').all()
@@ -133,7 +139,7 @@ def main():
             
             print(f"📋 Всего строк: {len(data)}")
             
-            # === ФИЛЬТРАЦИЯ ===
+            # Фильтрация
             today = date.today()
             filtered_data = []
             
@@ -146,7 +152,7 @@ def main():
             
             print(f"✅ Отобрано {len(filtered_data)} матчей (дата > {today.strftime('%d.%m.%Y')})")
             
-            # === КОНВЕРТАЦИЯ В JSON ===
+            # Конвертация в JSON
             matches = []
             for row in filtered_data:
                 match = {
@@ -164,7 +170,7 @@ def main():
                 }
                 matches.append(match)
             
-            # Извлекаем арены
+            # Арены
             arenas = sorted(list(set(m['arena'] for m in matches if m['arena'])))
             
             # Формируем JSON
@@ -187,6 +193,9 @@ def main():
             
         except Exception as e:
             print(f"❌ Ошибка: {e}")
+            import traceback
+            traceback.print_exc()
+            
             try:
                 page.screenshot(path="error_screenshot.png")
             except:
@@ -206,6 +215,7 @@ def main():
                 pass
         finally:
             browser.close()
+
 
 if __name__ == "__main__":
     main()
