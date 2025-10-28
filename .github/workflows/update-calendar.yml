@@ -5,9 +5,8 @@ on:
     - cron: '0 */6 * * *'  # Каждые 6 часов
   workflow_dispatch:        # Ручной запуск
 
-# ИСПРАВЛЕНИЕ: Добавляем права для GITHUB_TOKEN
 permissions:
-  contents: write  # Разрешаем запись в репозиторий
+  contents: write           # Разрешаем push в репозиторий
 
 jobs:
   update-calendar:
@@ -15,19 +14,20 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # Используем стандартный токен
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
           pip install playwright python-dotenv
           playwright install chromium
+          playwright install-deps chromium
 
       - name: Create .env file
         run: |
@@ -35,12 +35,43 @@ jobs:
           echo "FHMO_PASS=${{ secrets.FHMO_PASS }}" >> .env
 
       - name: Run parser
-        run: python3 fhm_parser_backend_v2.py
+        run: python3 parser_for_json_FIXED.py
+        continue-on-error: true
+
+      - name: Check if data was updated
+        id: check_changes
+        run: |
+          if [ -f matches_data.json ]; then
+            git add matches_data.json
+            if git diff --staged --quiet; then
+              echo "changed=false" >> $GITHUB_OUTPUT
+              echo "⚠️ Нет изменений в данных"
+            else
+              echo "changed=true" >> $GITHUB_OUTPUT
+              echo "✅ Данные обновлены"
+            fi
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "❌ Файл matches_data.json не создан"
+          fi
 
       - name: Commit and push changes
+        if: steps.check_changes.outputs.changed == 'true'
         run: |
-          git config --local user.name 'GitHub Actions Bot'
-          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
-          git add matches_data.json
-          git add -f page_screenshot.png page_source.html 2>/dev/null || true
-          git diff --quiet && git diff --staged --quiet || (git commit -m "🔄 Auto-update calendar data $(date '+%Y-%m-%d %H:%M')" && git push)
+          git config --local user.name "GitHub Actions Bot"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "🔄 Auto-update calendar data $(date '+%Y-%m-%d %H:%M UTC')"
+          git push
+
+      - name: Upload debug artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-files
+          path: |
+            error_screenshot.png
+            error_page.html
+            vsporte_final.html
+            *.html
+            *.png
+          retention-days: 7
