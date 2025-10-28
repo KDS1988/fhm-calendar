@@ -1007,24 +1007,20 @@ body {
         <div class="personnel-section">
           <h4>Назначение персонала</h4>
           <div class="form-group">
-            <label for="main-referee">Главный судья</label>
-            <input type="text" id="main-referee" value="${assignments[arena]?.mainReferee || ''}" placeholder="Введите имя главного судьи">
+            <label for="main-referee">Режиссер</label>
+            <input type="text" id="main-referee" value="${assignments[arena]?.mainReferee || ''}" placeholder="Введите имя режиссера">
           </div>
           <div class="form-group">
-            <label for="referee1">Судья 1</label>
-            <input type="text" id="referee1" value="${assignments[arena]?.referee1 || ''}" placeholder="Введите имя судьи 1">
+            <label for="referee1">Оператор</label>
+            <input type="text" id="referee1" value="${assignments[arena]?.referee1 || ''}" placeholder="Введите имя оператора">
           </div>
           <div class="form-group">
-            <label for="referee2">Судья 2</label>
-            <input type="text" id="referee2" value="${assignments[arena]?.referee2 || ''}" placeholder="Введите имя судьи 2">
+            <label for="referee2">Статист</label>
+            <input type="text" id="referee2" value="${assignments[arena]?.referee2 || ''}" placeholder="Введите имя статистика">
           </div>
           <div class="form-group">
-            <label for="scorer">Секретарь</label>
-            <input type="text" id="scorer" value="${assignments[arena]?.scorer || ''}" placeholder="Введите имя секретаря">
-          </div>
-          <div class="form-group">
-            <label for="timekeeper">Секундометрист</label>
-            <input type="text" id="timekeeper" value="${assignments[arena]?.timekeeper || ''}" placeholder="Введите имя секундометриста">
+            <label for="scorer">Комментатор</label>
+            <input type="text" id="scorer" value="${assignments[arena]?.scorer || ''}" placeholder="Введите имя комментатора">
           </div>
           <button class="btn btn-save" onclick="saveAssignment()">💾 Сохранить назначения</button>
         </div>
